@@ -1,0 +1,22 @@
+mode: set
+myRedditClone/pkg/user/repo_mock.go:25.61,29.2 3 0
+myRedditClone/pkg/user/repo_mock.go:32.59,34.2 1 0
+myRedditClone/pkg/user/repo_mock.go:37.70,43.2 5 0
+myRedditClone/pkg/user/repo_mock.go:46.86,49.2 2 0
+myRedditClone/pkg/user/repo_mock.go:52.69,58.2 5 0
+myRedditClone/pkg/user/repo_mock.go:61.85,64.2 2 0
+myRedditClone/pkg/user/repo_mysql.go:23.54,29.2 1 0
+myRedditClone/pkg/user/repo_mysql.go:31.80,41.16 5 1
+myRedditClone/pkg/user/repo_mysql.go:45.2,45.27 1 1
+myRedditClone/pkg/user/repo_mysql.go:49.2,49.18 1 1
+myRedditClone/pkg/user/repo_mysql.go:41.16,43.3 1 1
+myRedditClone/pkg/user/repo_mysql.go:45.27,47.3 1 1
+myRedditClone/pkg/user/repo_mysql.go:52.81,64.16 6 1
+myRedditClone/pkg/user/repo_mysql.go:69.2,73.16 2 1
+myRedditClone/pkg/user/repo_mysql.go:78.2,89.16 5 1
+myRedditClone/pkg/user/repo_mysql.go:94.2,95.16 2 1
+myRedditClone/pkg/user/repo_mysql.go:99.2,108.21 4 1
+myRedditClone/pkg/user/repo_mysql.go:64.16,67.3 2 1
+myRedditClone/pkg/user/repo_mysql.go:73.16,76.3 2 1
+myRedditClone/pkg/user/repo_mysql.go:89.16,92.3 2 1
+myRedditClone/pkg/user/repo_mysql.go:95.16,98.3 2 0

@@ -1,0 +1,593 @@
+
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+		<title>handlers: Go Coverage Report</title>
+		<style>
+			body {
+				background: black;
+				color: rgb(80, 80, 80);
+			}
+			body, pre, #legend span {
+				font-family: Menlo, monospace;
+				font-weight: bold;
+			}
+			#topbar {
+				background: black;
+				position: fixed;
+				top: 0; left: 0; right: 0;
+				height: 42px;
+				border-bottom: 1px solid rgb(80, 80, 80);
+			}
+			#content {
+				margin-top: 50px;
+			}
+			#nav, #legend {
+				float: left;
+				margin-left: 10px;
+			}
+			#legend {
+				margin-top: 12px;
+			}
+			#nav {
+				margin-top: 10px;
+			}
+			#legend span {
+				margin: 0 5px;
+			}
+			.cov0 { color: rgb(192, 0, 0) }
+.cov1 { color: rgb(128, 128, 128) }
+.cov2 { color: rgb(116, 140, 131) }
+.cov3 { color: rgb(104, 152, 134) }
+.cov4 { color: rgb(92, 164, 137) }
+.cov5 { color: rgb(80, 176, 140) }
+.cov6 { color: rgb(68, 188, 143) }
+.cov7 { color: rgb(56, 200, 146) }
+.cov8 { color: rgb(44, 212, 149) }
+.cov9 { color: rgb(32, 224, 152) }
+.cov10 { color: rgb(20, 236, 155) }
+
+		</style>
+	</head>
+	<body>
+		<div id="topbar">
+			<div id="nav">
+				<select id="files">
+				
+				<option value="file0">myRedditClone/pkg/handlers/post.go (91.6%)</option>
+				
+				<option value="file1">myRedditClone/pkg/handlers/user.go (82.4%)</option>
+				
+				</select>
+			</div>
+			<div id="legend">
+				<span>not tracked</span>
+			
+				<span class="cov0">not covered</span>
+				<span class="cov8">covered</span>
+			
+			</div>
+		</div>
+		<div id="content">
+		
+		<pre class="file" id="file0" style="display: none">package handlers
+
+import (
+        "bytes"
+        "encoding/json"
+        "errors"
+        "io/ioutil"
+        "log"
+        "myRedditClone/pkg/posts"
+        "myRedditClone/pkg/session"
+        "net/http"
+)
+
+type PostsHandler struct {
+        PostsRepo posts.PostsRepo
+        Sessions  *session.SessionManager
+}
+
+type DeleteMsg struct {
+        Msg string `json:"message"`
+}
+
+type CommentMsg struct {
+        Comment string `json:"comment"`
+}
+
+// for empty comment
+type CommentErrors struct {
+        CommErrors []*CommentErr `json:"errors"`
+}
+
+type CommentErr struct {
+        Location string `json:"location"`
+        MsgComm  string `json:"msg"`
+        Param    string `json:"param"`
+}
+
+// /for empty comment
+
+func (h *PostsHandler) List(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        elems, err := h.PostsRepo.GetAllPosts()
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, List err`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = sendJSON(w, len(elems), elems)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("List err:%s", err.Error())
+        }</span>
+}
+
+func (h *PostsHandler) ShowPost(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        postID := r.URL.Path
+        postID = postID[len("/api/post/"):]
+
+        post, err := h.PostsRepo.GetPost(postID)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, ShowPost no such post`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = sendJSON(w, 1, post)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("ShowPost err:%s", err.Error())
+        }</span>
+}
+
+func (h *PostsHandler) ShowCategory(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        postCategory := r.URL.Path
+        postCategory = postCategory[len("/api/posts/"):]
+
+        categoryPosts, err := h.PostsRepo.GetCategory(postCategory)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, ShowCategory no posts in category`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = sendJSON(w, len(categoryPosts), categoryPosts)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("ShowCategory err:%s", err.Error())
+        }</span>
+}
+
+func (h *PostsHandler) ShowAllUserPosts(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        userName := r.URL.Path
+        userName = userName[len("/api/user/"):]
+
+        userPosts, err := h.PostsRepo.GetAllUserPosts(userName)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, ShowAllUserPosts, user has no posts`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = sendJSON(w, len(userPosts), userPosts)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("ShowAllUserPosts err:%s", err.Error())
+        }</span>
+}
+
+func (h *PostsHandler) AddNewPost(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        sess, err := session.SessionFromContext(r.Context())
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, AddNewPost SessionFromContext err`, http.StatusInternalServerError)
+                return
+        }</span>
+        <span class="cov8" title="1">newPost, err := h.PostsRepo.CreatePost(r, sess.UserID, sess.UserLogin)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, AddNewPost CreatePost err`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = sendJSON(w, 1, newPost)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("AddNewPost err:%s", err.Error())
+        }</span>
+}
+
+func (h *PostsHandler) DeletePost(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        err := h.PostsRepo.DeletePostFromRepo(r)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">msg := &amp;DeleteMsg{
+                Msg: "success",
+        }
+
+        err = sendJSON(w, 0, msg)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("DeletePost err:%s", err.Error())
+        }</span>
+}
+
+func (h *PostsHandler) AddNewComment(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        sess, err := session.SessionFromContext(r.Context())
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, CreateComment SessionFromContext err`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">if r.Header.Get("Content-Type") != "application/json" </span><span class="cov8" title="1">{
+                http.Error(w, `unknown payload`, http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov8" title="1">body, _ := ioutil.ReadAll(r.Body)
+        r.Body.Close()
+
+        comm := &amp;CommentMsg{}
+        err = json.Unmarshal(body, comm)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, "pkg handlers cant unpack payload in AddNewComment", http.StatusBadRequest)
+                return
+        }</span>
+
+        // if comment body is empty
+        <span class="cov8" title="1">if comm.Comment == "" </span><span class="cov8" title="1">{
+                w.WriteHeader(http.StatusUnprocessableEntity)
+                sendCommentErr(w)
+                return
+        }</span>
+
+        <span class="cov8" title="1">postID := r.URL.Path[len("/api/post/"):]
+
+        updatedPost, err := h.PostsRepo.AddCommentInPostRepository(postID, comm.Comment, sess.UserID, sess.UserLogin)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, CreateComment err`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = sendJSON(w, 1, updatedPost)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("AddNewComment err:%s", err.Error())
+        }</span>
+}
+
+// // for empty comment
+func sendCommentErr(w http.ResponseWriter) <span class="cov8" title="1">{
+        commErrors := &amp;CommentErrors{}
+
+        commErr := &amp;CommentErr{
+                Location: "body",
+                MsgComm:  "is required",
+                Param:    "comment",
+        }
+
+        commErrors.CommErrors = append(commErrors.CommErrors, commErr)
+        err := sendJSON(w, 0, commErrors)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("AddNewComment: sendCommentErr err:%s", err.Error())
+        }</span>
+}
+
+// // /for empty comment
+
+func (h *PostsHandler) DeleteComment(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        sess, err := session.SessionFromContext(r.Context())
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, DeleteComment SessionFromContext err`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">postID, commID, err := getPostCommentID(r.URL.Path)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, DeleteComment getPostCommentID err`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">updatedPost, err := h.PostsRepo.DeleteCommentInPostRepository(postID, commID, sess.UserID, sess.UserLogin)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, DeleteComment DeleteCommentInPostRepository err`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = sendJSON(w, 1, updatedPost)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("DeleteComment err:%s", err.Error())
+        }</span>
+}
+
+func (h *PostsHandler) UpVote(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        sess, err := session.SessionFromContext(r.Context())
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, UpVote SessionFromContext err`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">postID, _, err := getPostCommentID(r.URL.Path)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">updatedPost, err := h.PostsRepo.UpVotePost(postID, sess.UserID)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, UpVote UpVotePost err`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = sendJSON(w, 1, updatedPost)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("UpVote err:%s", err.Error())
+        }</span>
+}
+
+func (h *PostsHandler) DownVote(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        sess, err := session.SessionFromContext(r.Context())
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, DownVote SessionFromContext err`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">postID, _, err := getPostCommentID(r.URL.Path)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">updatedPost, err := h.PostsRepo.DownVotePost(postID, sess.UserID)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, DownVote DownVotePost err`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = sendJSON(w, 1, updatedPost)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("DownVote err:%s", err.Error())
+        }</span>
+}
+
+func (h *PostsHandler) UnVote(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        sess, err := session.SessionFromContext(r.Context())
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, UnVote SessionFromContext err`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">postID, _, err := getPostCommentID(r.URL.Path)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">updatedPost, err := h.PostsRepo.UnVotePost(postID, sess.UserID)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `pckg handlers, UnVote UnVotePost err`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">err = sendJSON(w, 1, updatedPost)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Printf("UnVote err:%s", err.Error())
+        }</span>
+}
+
+func sendJSON(w http.ResponseWriter, dataLen int, data interface{}) error <span class="cov8" title="1">{
+        byteValue, err := json.Marshal(data)
+        if err != nil </span><span class="cov0" title="0">{
+                return errors.New("sendJSON, json.Marshal err")
+        }</span>
+
+        <span class="cov8" title="1">if dataLen &gt; 0 </span><span class="cov8" title="1">{
+                byteValue = validatePostsType(byteValue, dataLen)
+        }</span>
+
+        <span class="cov8" title="1">_, err = w.Write(byteValue)
+        if err != nil </span><span class="cov0" title="0">{
+                return errors.New("sendJSON, w.Write err")
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+
+func validatePostsType(data []byte, dataLen int) []byte <span class="cov8" title="1">{
+        bytesIdxShift := 0
+        for idx := 0; idx &lt; dataLen; idx++ </span><span class="cov8" title="1">{
+                bytesIdxShift = bytes.Index(data[bytesIdxShift:], []byte(`type`)) + len([]byte(`"type":`)) + bytesIdxShift
+                switch data[bytesIdxShift] </span>{
+                case 't':<span class="cov8" title="1">
+                        data = bytes.Replace(data, []byte("data"), []byte("text"), 1)</span>
+                case 'l':<span class="cov8" title="1">
+                        data = bytes.Replace(data, []byte("data"), []byte("url"), 1)</span>
+                }
+        }
+
+        <span class="cov8" title="1">return data</span>
+}
+
+func getPostCommentID(link string) (string, string, error) <span class="cov8" title="1">{
+        link = link[len("/api/post/"):]
+
+        linkByte := []byte(link)
+        slashIdx := bytes.Index(linkByte, []byte(`/`))
+
+        if slashIdx == -1 </span><span class="cov8" title="1">{
+                return "", "", errors.New(`incorrect link`)
+        }</span>
+
+        // первым возвращается ID поста, потом комментария
+        <span class="cov8" title="1">return string(linkByte[:slashIdx]), string(linkByte[slashIdx+1:]), nil</span>
+}
+</pre>
+		
+		<pre class="file" id="file1" style="display: none">package handlers
+
+import (
+        "encoding/json"
+        "errors"
+        "io/ioutil"
+        "log"
+        "net/http"
+        "os"
+
+        "myRedditClone/pkg/session"
+        "myRedditClone/pkg/user"
+)
+
+type UserHandler struct {
+        UserRepo user.UserRepo
+        // Sessions *session.SessionManager
+        Sessions session.SessionRepo
+}
+
+type LoginForm struct {
+        Login    string `json:"username"`
+        Password string `json:"password"`
+}
+
+type MessageUser struct {
+        Msg string `json:"message"`
+}
+
+// показ начальной страницы
+func (h *UserHandler) Index(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        w.Header().Set("Content-Type", "text/html")
+
+        dataHTML, err := os.Open("../../static/html/index.html")
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, `Template errror`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">byteValue, err := ioutil.ReadAll(dataHTML)
+        if err != nil </span><span class="cov0" title="0">{
+                http.Error(w, `Parsing html error`, http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">_, err = w.Write(byteValue)
+        if err != nil </span><span class="cov0" title="0">{
+                log.Println("err in pckg handlers, Index", err.Error())
+                return
+        }</span>
+}
+
+func (h *UserHandler) Register(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        if r.Header.Get("Content-Type") != "application/json" </span><span class="cov8" title="1">{
+                http.Error(w, `unknown payload`, http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov8" title="1">body, _ := ioutil.ReadAll(r.Body)
+        r.Body.Close()
+
+        fd := &amp;LoginForm{}
+        err := json.Unmarshal(body, fd)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, "cant unpack payload", http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov8" title="1">us, err := h.UserRepo.AddNewUser(fd.Login, fd.Password)
+        if err != nil </span><span class="cov8" title="1">{
+                msg := &amp;MessageUser{
+                        Msg: err.Error(),
+                }
+                w.WriteHeader(401)
+                err = sendJSONUser(w, msg)
+                if err != nil </span><span class="cov0" title="0">{
+                        http.Error(w, err.Error(), http.StatusBadRequest)
+                        return
+                }</span>
+                <span class="cov8" title="1">return</span>
+        }
+        // create session in db / JWT
+        <span class="cov8" title="1">sess, err := h.Sessions.Create(w, us.ID, us.Login)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">log.Println("Register", "created session for:", us.Login, "user ID:", sess.UserID, "session ID:", sess.ID)</span>
+}
+
+func (h *UserHandler) Login(w http.ResponseWriter, r *http.Request) <span class="cov8" title="1">{
+        if r.Header.Get("Content-Type") != "application/json" </span><span class="cov8" title="1">{
+                http.Error(w, `unknown payload`, http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov8" title="1">body, _ := ioutil.ReadAll(r.Body)
+        r.Body.Close()
+
+        fd := &amp;LoginForm{}
+        err := json.Unmarshal(body, fd)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, `cant unpack payload`, http.StatusBadRequest)
+                return
+        }</span>
+
+        <span class="cov8" title="1">us, err := h.UserRepo.Authorize(fd.Login, fd.Password)
+        if err != nil </span><span class="cov8" title="1">{
+                msg := &amp;MessageUser{
+                        Msg: err.Error(),
+                }
+                w.WriteHeader(401)
+                err = sendJSONUser(w, msg)
+                if err != nil </span><span class="cov0" title="0">{
+                        http.Error(w, err.Error(), http.StatusBadRequest)
+                        return
+                }</span>
+                <span class="cov8" title="1">return</span>
+        }
+        // create session login / JWT
+        <span class="cov8" title="1">sess, err := h.Sessions.Create(w, us.ID, us.Login)
+        if err != nil </span><span class="cov8" title="1">{
+                http.Error(w, err.Error(), http.StatusInternalServerError)
+                return
+        }</span>
+
+        <span class="cov8" title="1">log.Println("Login", "created session for:", us.Login, "user ID:", sess.UserID, "session ID:", sess.ID)</span>
+}
+
+func sendJSONUser(w http.ResponseWriter, data interface{}) error <span class="cov8" title="1">{
+        byteValue, err := json.Marshal(data)
+        if err != nil </span><span class="cov0" title="0">{
+                return errors.New("sendJSON, json.Marshal err")
+        }</span>
+
+        <span class="cov8" title="1">_, err = w.Write(byteValue)
+        if err != nil </span><span class="cov0" title="0">{
+                return errors.New("sendJSON, w.Write err")
+        }</span>
+
+        <span class="cov8" title="1">return nil</span>
+}
+</pre>
+		
+		</div>
+	</body>
+	<script>
+	(function() {
+		var files = document.getElementById('files');
+		var visible;
+		files.addEventListener('change', onChange, false);
+		function select(part) {
+			if (visible)
+				visible.style.display = 'none';
+			visible = document.getElementById(part);
+			if (!visible)
+				return;
+			files.value = part;
+			visible.style.display = 'block';
+			location.hash = part;
+		}
+		function onChange() {
+			select(files.value);
+			window.scrollTo(0, 0);
+		}
+		if (location.hash != "") {
+			select(location.hash.substr(1));
+		}
+		if (!visible) {
+			select("file0");
+		}
+	})();
+	</script>
+</html>
