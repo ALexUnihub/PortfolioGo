@@ -14,7 +14,7 @@
     docker rm $(docker ps -a -q)
     docker volume prune -f
 
-Потом в backend/redditclone/cmd запустить main.go (изначально на 8080 порту):
+Потом в backend/redditclone/cmd/redditclone запустить main.go (изначально на 8080 порту):
 
     go run main.go
 
@@ -27,8 +27,9 @@
     go test -v
 
 ## Микросервис
-Код находится в microservice/service.go, в admin.go - логика администрирования, чтобы получать логи с сервиса, данные
-передается по протоколу protobuf.
+Код находится в microservice/service.go, в admin.go - логика администрирования, чтобы получать логи и
+статистику с сервиса, данные передаются по протоколу protobuf.
+
 Для данной функции есть тесты (service_test.go), которые можно запустить через:
 
     go test -v -race
